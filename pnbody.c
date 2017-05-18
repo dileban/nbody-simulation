@@ -31,7 +31,7 @@
 #define MASS_OF_UNKNOWN 1.899e12  //  for m.                    
 
 
-
+/* Positional values of particle in space */
 typedef struct {
 
    double px, py, pz;
@@ -39,6 +39,7 @@ typedef struct {
 } Position;
 
 
+/* Components of velocity of particle */
 typedef struct {
 
    double vx, vy, vz;
@@ -46,6 +47,7 @@ typedef struct {
 } Velocity;
 
 
+/* Components of force experienced by particle */
 typedef struct {
 
    double fx, fy, fz;
@@ -53,45 +55,47 @@ typedef struct {
 } Force;
 
 
+/* Cubic cell representing tree node in Barnes-Hut algo. */
 typedef struct Cell  {
 
-   int index;                    
-                                 
-   int no_subcells;              
-   double mass;                  
-   double x, y, z;               
-   double cx, cy, cz;            
-   double width, height, depth;  
-   struct Cell* subcells[8];     
+   int index;                    // Index into arrays to identify particle's  
+                                 // position and mass                         
+   int no_subcells;              // Indicate whether cell is leaf or not      
+   double mass;                  // Mass of particle of total mass of subtree 
+   double x, y, z;               // Location of cell(cube) in space           
+   double cx, cy, cz;            // Location of center of mass of cell        
+   double width, height, depth;  // Width, Height, and Depth of cell          
+   struct Cell* subcells[8];     // Pointers to child nodes                   
 
 } Cell;
 
 
 
-Position* position;   
-Velocity* ivelocity;  
-Velocity* velocity;   
-double* mass;         
-double* radius;       
-Force* force;         
-Cell* root_cell;      
+Position* position;   // Current positions for all particles            
+Velocity* ivelocity;  // Initial velocity for all particles             
+Velocity* velocity;   // Velocity of particles in current processor     
+double* mass;         // Mass of each particle                          
+double* radius;       // Radius of each particle                        
+Force* force;         // Force experienced by all particles             
+Cell* root_cell;      // Root of BH octtree                             
 
 
+/* MPI datatypes for exchanging particles */
 MPI_Datatype MPI_POSITION;
 MPI_Datatype MPI_VELOCITY;
 
 
-int N;          
-int TIME;       
-int rank;       
-int size;       
-int part_size;  
-int pindex;     
-                
+int N;           // User specified particle count                                         
+int TIME;        // User specified iterations                                             
+int rank;        // Rank of process                                                       
+int size;        // Number of processes in the group                                      
+int part_size;   // Number of particles each processor is responsible for                 
+int pindex;      // The pindex points to the slot in the vectors/arrays that contains     
+                 // data concerning the current processor, i.e pindex = (rank * part_size)
 
 
-int name_length;                   
-char name[MPI_MAX_PROCESSOR_NAME]; 
+int name_length;                   // Length of processor name     
+char name[MPI_MAX_PROCESSOR_NAME]; // Buffer to hold processor name
 
 
 
