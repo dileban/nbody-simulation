@@ -98,22 +98,33 @@ int name_length;                   // Length of processor name
 char name[MPI_MAX_PROCESSOR_NAME]; // Buffer to hold processor name
 
 
-
+/*
+ * Generates a random number in the range 0 to 1
+ */
 double generate_rand(){
    return rand()/((double)RAND_MAX + 1);
 }
 
 
-
+/*
+ * Generates a random number in the range -1 to 1
+ */
 double generate_rand_ex(){
    return 2 * generate_rand() - 1;
 }
 
 
+/*
+ * Function to initalize the bodies in space. The particles
+ * are given a random locaton (px, py, pz), velocity (vx, vy, vz)
+ * and random mass. 
+ */
 void initialize_space() {   
    
    int i;
 
+   // Inner bounds to prevent generating a particle whose
+   // surface lies outside the boundaries of space   
    double ixbound = XBOUND - RBOUND;
    double iybound = YBOUND - RBOUND;
    double izbound = ZBOUND - RBOUND;
@@ -132,6 +143,10 @@ void initialize_space() {
 }
 
 
+/*
+ * Checks if two particles in space intersect/collide
+ *
+ */
 int check_collision(int index1, int index2) {
 
    if (pow((position[index1].px - position[index2].px), 2.0) + 
@@ -147,6 +162,9 @@ int check_collision(int index1, int index2) {
 }
 
 
+/*
+ * Computes the distance between two particles in space
+ */
 double compute_distance(Position a, Position b){
     return sqrt(pow((a.px - b.px), 2.0) +
                pow((a.py - b.py), 2.0) +
@@ -154,6 +172,13 @@ double compute_distance(Position a, Position b){
 }
 
 
+/*
+ * Since the initial positions and radii were generated randomly
+ * the system would have inherited a set of particles that were
+ * already in collision. This method reinitializes the radius of
+ * the particles such that the particles are not in collision with
+ * each other.
+ */
 void reinitialize_radius() {
 
    int i, j;
@@ -171,7 +196,11 @@ void reinitialize_radius() {
 }
 
 
-
+/*
+ * Computes the forces experienced by each of the particles 
+ * as a result of the gravitational attraction with every other
+ * particle in space
+ */
 void compute_force(){
 
    int i, j;   
@@ -202,6 +231,10 @@ void compute_force(){
 }
 
 
+/*
+ * Computes the new velocities as a result of the 
+ * forces experienced
+ */
 void compute_velocity(){
    int i;
    for (i = 0; i < part_size; i++) {
@@ -212,6 +245,9 @@ void compute_velocity(){
 }
 
 
+/*
+ * Computes the new positions of the particles in space
+ */
 void compute_positions(){
    int i;
    for (i = 0; i < part_size; i++) {
