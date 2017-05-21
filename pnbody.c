@@ -14,21 +14,22 @@
 #include <mpi.h> 
 
 
-#define DEFAULT_N 10000   // Number of particles                   
-#define DEFAULT_TIME 1000 // Number if iterations                  
-#define G 6.67300e-11     // Gravitational constant, m3 kg-1 s-2   
-#define XBOUND 1.0e6      // Width of space                        
-#define YBOUND 1.0e6      // Height of space                       
-#define ZBOUND 1.0e6      // Depth of space                        
-#define RBOUND 10         // Upper bound on radius                 
-#define DELTAT 0.01       // Time increament                       
+#define DEFAULT_N 10000   // Number of particles
+#define DEFAULT_TIME 1000 // Number if iterations
+#define G 6.67300e-11     // Gravitational constant, m3 kg-1 s-2
+#define XBOUND 1.0e6      // Width of space
+#define YBOUND 1.0e6      // Height of space
+#define ZBOUND 1.0e6      // Depth of space
+#define RBOUND 10         // Upper bound on radius
+#define DELTAT 0.01       // Time increament
 #define THETA 1.0         // Opening angle, for approximation in BH
 
 
-#define MASS_OF_JUPITER 1.899e27  //  Sample masses for testing 
-#define MASS_OF_EARTH 5.974e24    //  and comparing the effect  
-#define MASS_OF_MOON 7.348e22     //  of using different values 
-#define MASS_OF_UNKNOWN 1.899e12  //  for m.                    
+#define MASS_OF_JUPITER 1.899e27   //  Sample masses for testing
+#define MASS_OF_EARTH 5.974e24     //  and comparing the effect 
+#define MASS_OF_MOON 7.348e22      //  of using different values 
+#define MASS_OF_UNKNOWN 1.899e12   //  for m.
+
 
 
 /* Positional values of particle in space */
@@ -58,26 +59,26 @@ typedef struct {
 /* Cubic cell representing tree node in Barnes-Hut algo. */
 typedef struct Cell  {
 
-   int index;                    // Index into arrays to identify particle's  
-                                 // position and mass                         
-   int no_subcells;              // Indicate whether cell is leaf or not      
-   double mass;                  // Mass of particle of total mass of subtree 
-   double x, y, z;               // Location of cell(cube) in space           
-   double cx, cy, cz;            // Location of center of mass of cell        
-   double width, height, depth;  // Width, Height, and Depth of cell          
-   struct Cell* subcells[8];     // Pointers to child nodes                   
+   int index;                    // Index into arrays to identify particle's 
+                                 // position and mass
+   int no_subcells;              // Indicate whether cell is leaf or not
+   double mass;                  // Mass of particle of total mass of subtree
+   double x, y, z;               // Location of cell(cube) in space
+   double cx, cy, cz;            // Location of center of mass of cell
+   double width, height, depth;  // Width, Height, and Depth of cell
+   struct Cell* subcells[8];     // Pointers to child nodes
 
 } Cell;
 
 
 
-Position* position;   // Current positions for all particles            
-Velocity* ivelocity;  // Initial velocity for all particles             
-Velocity* velocity;   // Velocity of particles in current processor     
-double* mass;         // Mass of each particle                          
-double* radius;       // Radius of each particle                        
-Force* force;         // Force experienced by all particles             
-Cell* root_cell;      // Root of BH octtree                             
+Position* position;   // Current positions for all particles
+Velocity* ivelocity;  // Initial velocity for all particles
+Velocity* velocity;   // Velocity of particles in current processor
+double* mass;         // Mass of each particle
+double* radius;       // Radius of each particle
+Force* force;         // Force experienced by all particles
+Cell* root_cell;      // Root of BH octtree
 
 
 /* MPI datatypes for exchanging particles */
@@ -85,17 +86,18 @@ MPI_Datatype MPI_POSITION;
 MPI_Datatype MPI_VELOCITY;
 
 
-int N;           // User specified particle count                                         
-int TIME;        // User specified iterations                                             
-int rank;        // Rank of process                                                       
-int size;        // Number of processes in the group                                      
-int part_size;   // Number of particles each processor is responsible for                 
-int pindex;      // The pindex points to the slot in the vectors/arrays that contains     
-                 // data concerning the current processor, i.e pindex = (rank * part_size)
+int N;               // User specified particle count
+int TIME;            // User specified iterations
+int rank;            // Rank of process
+int size;            // Number of processes in the group
+int part_size;       // Number of particles each processor is responsible for
+int pindex;          // The pindex points to the slot in the vectors/arrays that contains 
+                     // data concerning the current processor, i.e pindex = (rank * part_size)
 
 
-int name_length;                   // Length of processor name     
-char name[MPI_MAX_PROCESSOR_NAME]; // Buffer to hold processor name
+int name_length;                    // Length of processor name
+char name[MPI_MAX_PROCESSOR_NAME];  // Buffer to hold processor name
+
 
 
 /*
@@ -124,7 +126,7 @@ void initialize_space() {
    int i;
 
    // Inner bounds to prevent generating a particle whose
-   // surface lies outside the boundaries of space   
+   // surface lies outside the boundaries of space
    double ixbound = XBOUND - RBOUND;
    double iybound = YBOUND - RBOUND;
    double izbound = ZBOUND - RBOUND;
@@ -154,6 +156,7 @@ int check_collision(int index1, int index2) {
        pow((position[index1].pz - position[index2].py), 2.0) <
        pow((radius[index1] + radius[index2]), 2.0)) {
        
+       // Collision detected
        return 1;
 
    }
@@ -194,6 +197,7 @@ void reinitialize_radius() {
       }
    }
 }
+
 
 
 /*
@@ -270,6 +274,10 @@ void compute_positions(){
 
 
 
+/*
+ * Creates a cell (node) for use in the octtree
+ *
+ */
 Cell* BH_create_cell(double width, double height, double depth) {
 
    Cell* cell = malloc(sizeof(Cell));
@@ -286,6 +294,10 @@ Cell* BH_create_cell(double width, double height, double depth) {
 }
 
 
+/*
+ * Sets the location of the subcells relative to the current cell
+ *
+ */
 void BH_set_location_of_subcells(Cell* cell, double width, double heigth, double depth){
 
    // Set location of new cells
@@ -323,6 +335,11 @@ void BH_set_location_of_subcells(Cell* cell, double width, double heigth, double
 }
 
 
+/*
+ * Generates new subcells for the current cell, forming
+ * a subtree. The current cell will no longer be a leaf
+ *
+ */
 void BH_generate_subcells(Cell* cell) {
    
    // Calculate subcell dimensions
@@ -343,6 +360,10 @@ void BH_generate_subcells(Cell* cell) {
 }
 
 
+/*
+ * Locates the subcell to which the particle must be added
+ *
+ */
 int BH_locate_subcell(Cell* cell, int index) {
 
    // Determine which subcell to add the body to
@@ -377,6 +398,12 @@ int BH_locate_subcell(Cell* cell, int index) {
 }
 
 
+/*
+ * Added a particle to the cell. If a particle already
+ * exists, the cube/cell is sub-divided adding the existing
+ * and new particle to the sub cells
+ *
+ */
 void BH_add_to_cell(Cell* cell, int index) {
 
    if (cell->index == -1) {         
@@ -400,6 +427,11 @@ void BH_add_to_cell(Cell* cell, int index) {
 }
 
 
+/*
+ * Generates the octtree for the entire system of
+ * particles
+ *
+ */
 void BH_generate_octtree() {
    
    // Initialize root of octtree
@@ -426,6 +458,11 @@ void BH_generate_octtree() {
 }
 
 
+/*
+ * Computes the total mass and the center of mass of
+ * the current cell
+ *
+ */
 Cell* BH_compute_cell_properties(Cell* cell){
    
    if (cell->no_subcells == 0) {
@@ -459,6 +496,11 @@ Cell* BH_compute_cell_properties(Cell* cell){
 }
 
 
+/*
+ * Computes the force experienced between a particle and
+ * a cell
+ *
+ */
 void BH_compute_force_from_cell(Cell* cell, int index) {
    double d = compute_distance(position[index], position[cell->index]);
 
@@ -473,6 +515,11 @@ void BH_compute_force_from_cell(Cell* cell, int index) {
 }
 
 
+/*
+ * Computes the force between the particles in the system, 
+ * using the clustering-approximation for long distant forces
+ *
+ */
 void BH_compute_force_from_octtree(Cell* cell, int index) {
    
    if (cell->no_subcells == 0) {
@@ -497,6 +544,12 @@ void BH_compute_force_from_octtree(Cell* cell, int index) {
 }
 
 
+
+/*
+ * Computes the forces experienced by the particles in space
+ * using the Barnes-Hut algorithm, resulting in NlogN running
+ * time
+ */
 void BH_compute_force(){
 
    int i, j;   
@@ -512,6 +565,9 @@ void BH_compute_force(){
 }
 
 
+/*
+ * Prints spaces for formatting tree output
+ */
 void BH_print_spaces(int number){
    int i;
    for (i = 0; i < number; i++)
@@ -519,6 +575,9 @@ void BH_print_spaces(int number){
 }
 
 
+/* 
+ * Prints the octtree to the console. Used for debugging.
+ */
 void BH_print_octtree_ex(Cell* cell, int level, int cell_no) {
 
    BH_print_spaces(level);
@@ -546,11 +605,18 @@ void BH_print_octtree_ex(Cell* cell, int level, int cell_no) {
 }
 
 
+/*
+ * Prints the octtree starting at the root. Used
+ * for debugging
+ */
 void BH_print_octtree(Cell* cell){
    BH_print_octtree_ex(cell, 0, 0);
 }
 
 
+/*
+ * Deletes the octtree
+ */
 void BH_delete_octtree(Cell* cell) {
    
    if (cell->no_subcells == 0) {
@@ -567,6 +633,9 @@ void BH_delete_octtree(Cell* cell) {
 }
 
 
+/*
+ * Prints the mass of each particle. Used for debugging.
+ */
 void print_mass(){
    int i;
    for (i = 0; i < N; i++)
@@ -575,6 +644,9 @@ void print_mass(){
 }
 
 
+/*
+ * Prints the velocity of each particle. Used for debugging.
+ */
 void print_velocity(){
    int i;
    for (i = 0; i < part_size; i++)
@@ -583,6 +655,10 @@ void print_velocity(){
 }
 
 
+/*
+ * Prints the initial velocity of each particle. Used for
+ * debugging.
+ */
 void print_ivelocity(){
    int i;
    for (i = 0; i < N; i++)
@@ -591,6 +667,9 @@ void print_ivelocity(){
 }
 
 
+/*
+ * Prints the position of each particle. Used for debugging.
+ */
 void print_position(){
    int i;
    for (i = 0; i < N; i++)
@@ -600,6 +679,10 @@ void print_position(){
 
 
 
+/*
+ * Prints the current values of the bodies in space
+ * to the console
+ */
 void print_space() {
 
    int i;
@@ -612,7 +695,10 @@ void print_space() {
    }
 }
 
-
+/*
+ * Writes the current positions of the particles to file
+ *
+ */
 void write_positions() {
 
    FILE* file;
@@ -635,6 +721,9 @@ void write_positions() {
 
 
 
+/*
+ * Initializes the velocity array used by each of the processes
+ */
 void init_velocity(){
    int i;
    for (i = 0; i < part_size; i++){
@@ -645,6 +734,9 @@ void init_velocity(){
 }
 
 
+/*
+ * Runs the N-Body simulation
+ */
 void run_simulation(){
 
    if (rank == 0)
