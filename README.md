@@ -43,3 +43,14 @@ for (i ← 0 to N ) do
   update_position_on_i();
 end for
 ```
+
+## Parallelizing the N-Body Problem
+
+Parallelizing the N-body simulation on a cluster can give significant speedups, depending on the number of processors and interconnection network used. An intuitive approach to parallelization is to partition the problem into P groups, where P is the number of processors, each processor being responsible for N/P particles. Each processor is also responsible for computing the forces experienced by the particles in its group and updating their positions. At the end of each iteration, the processors exchange the new positions of their particles with other processors, so that all processors now have complete updated view of the system. While parallel execution can help speedup the simulation, this does not improve the complexity of the algorithm. For large problem sizes this can still be a problem.
+
+### Improving time complexity
+
+The algorithm described so far is a simple particle-particle approach where the mutual forces between every pair of particles is the system is computed. A number of [other](http://www.amara.com/papers/nbody.html) [interesting](http://www.scholarpedia.org/article/N-body simulations) algorithms for N-body simulations exists that can give an improved time complexity. Some of the popular methods use the divide and conquer approach where the system is spatially decomposed into a hierarchical cluster in the form of a tree, with each node describing the mass and cubic volume of a cluster in the system. These algorithms are also referred to as hierarchical or tree (code) methods. Two widely used hierarchical algorithms in real world applications are the [Barnes-Hut](https://en.wikipedia.org/wiki/Barnes%E2%80%93Hut_simulation) algorithm and [Greengard’s Fast Multipole Method](https://en.wikipedia.org/wiki/Fast_multipole_method).
+
+Both these algorithms give significant improvements, with Barnes-Hut resulting in O(Nlog<sub>2</sub>N) time complexity and the Fast Multipole Method (FMM) in O(N) complexity for uniform distributions. The efficient implementation of the FMM however is significantly more complex for a three dimensional system and in general requires a larger number of iterations before the algorithm can show comparatively better [speedups](http://www.cs.cmu.edu/~scandal/papers/dimacs-nbody.html). The code presented here is primarily concerned with achievable speedups through
+parallelization, and will thus focus on the Barnes-Hut algorithm for its simplicity, effectiveness in reducing the overall running time and its wider usage in real world applications.
