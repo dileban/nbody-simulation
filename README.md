@@ -26,3 +26,20 @@ This results in a new velocity v<sub>i</sub><sup>x'</sup> after time δt:
 <p style="text-align: center;">v<sub>i</sub><sup>x'</sup> = v<sub>i</sub><sup>x</sup> + a<sub>i</sub><sup>x</sup> δt</p>
 
 The N-body simulation then continues for a predetermined time period T , integrating with δt discrete time steps. In order to achieve accurate results, the time intervals between each integration step must be short.
+
+## A Naive Algorithm
+
+A straight forward algorithm for the N-body problem involves computing the forces experienced by each of the N bodies as a result of the gravitational attraction influenced by the other N-1 bodies, for each time step. The complexity of this algorithm for one iteration is Θ(N<sup>2</sup>). Further, since there are N bodies in the system, the spatial (memory) complexity of the algorithm is Θ(N). For practical applications however, where N is large, the quadratic time complexity of the algorithm quickly becomes intractable and better approaches are required.
+
+```c
+for (i ← 0 to N ) do
+  for (j ← 0 to N ) do
+    if (i == j) then
+      continue;
+    end if
+    compute_force_on_i();
+  end for
+  compute_velocity_on_i();
+  update_position_on_i();
+end for
+```
