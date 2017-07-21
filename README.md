@@ -76,3 +76,29 @@ A further optimization can be made by using the fact that particles move very sm
 of the tree whose corresponding particles have moved outside the cell, a significant computation time can be saved when N is large.
 
 A third optimization involves parallelizing the tree generation such that each of the node generates a partial tree contain particles belonging to it. Once generated, the nodes in the cluster exchange their partial trees with each other, resulting in each of the nodes having a complete tree representing the system.
+
+### Spatially bounded and unbounded systems
+
+Simulations of N-body problems may assume a closed system where the particles move within the boundaries of a spatially bounded system. Alternatively, the system can be unbounded allowing particles to move continually further apart. While the former is more useful in fields such as molecular and fluid dynamics, the later better reflects simulations on celestial bodies. Closed systems may need to make certain assumptions on the collision of a particle with a boundary. This paper examines the more interesting case of spatially bounded systems, and assumes that collisions are elastic (i.e. kinetic energy is conserved). Using the law of conservation of momentum, a collision with the Boundary<sub>x</sub> results in:
+
+<p style="text-align: center;">m<sub>i</sub>v<sub>i</sub><sup>x'</sup> = m<sub>i</sub>v<sub>i</sub><sup>x</sup></p>
+
+where v<sub>i</sub><sup>x'</sup> is the velocity of the particle in the opposite direction.
+
+### Particle collisions and 3D collision detection
+
+While simulations on stellar systems can be assumed to be collision-less, collisions are an important phenomenon and often modeled in molecular and fluid dynamics. The simulation described in this paper is a collision-based system for two reasons. First, many real world simulations, including stellar systems, model the effects of collisions. Secondly, collisions on particles with a radius can help prevent the interaction forces from reaching unreasonably high numbers, resulting in very high particle velocities.
+
+The algorithm for collision detection takes time O(N<sup>2</sup>), where each particle is checked for possile intersection with every other particle in the system. Although a brute force approach to collision detection is described here, it is relatively easy to use the octtree from the Barnes-Hut algorithm to significantly reduce the number of particles that must be checked for collisions.
+
+Two particles P<sub>1</sub> and P<sub>2</sub> intersect if:
+
+(P<sub>2</sub><sup>x</sup> − P<sub>1</sub><sup>x</sup>)<sup>2</sup> + (P<sub>2</sub><sup>y</sup> − P<sub>1</sub><sup>y</sup> )<sup>2</sup> + (P<sub>2</sub><sup>z</sup> − P<sub>1</sub><sup>z</sup>) 2 < (R<sub>1</sub> + R<sub>2</sub>)<sup>2</sup>
+
+```c
+for (i ← 0 to N − 1) do
+  for (j ← i + 1 to N ) do
+    check_collision();
+  end for
+end for
+```
