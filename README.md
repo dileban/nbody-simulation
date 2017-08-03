@@ -102,3 +102,11 @@ for (i ← 0 to N − 1) do
   end for
 end for
 ```
+
+## Parallel Platform
+
+The parallel computing platform used for the simulation is a distributed memory system, where processors communicate using message passing. Two widely used message passing libraries for parallel programming are [MPI (Message Passing Interface)](https://en.wikipedia.org/wiki/Message_Passing_Interface) and [PVM (Parallel Virtual Machine)](https://en.wikipedia.org/wiki/Parallel_Virtual_Machine). The solution described in this paper is based on MPI. While both libraries are suitable for writing portable parallel programs (and support heterogeneous systems), the choice was largely based on general familiarity, simplicity, a number of readily available implementations.
+
+The parallel programming model used is [Single Program Multiple Data (SPMD)](https://en.wikipedia.org/wiki/SPMD), where all processors execute the same N-body simulation program, with a distinction being made between the master (root) process, which coordinates the distribution of data for computation, with slave processes that (including the master) executes the simulation on the designated set of particles. These distinctions are made using conditional checks within the program.
+
+
