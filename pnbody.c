@@ -6,13 +6,11 @@
  */
 
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h> 
 #include <mpi.h> 
-
 
 #define DEFAULT_N 10000   // Number of particles
 #define DEFAULT_TIME 1000 // Number if iterations
@@ -24,12 +22,10 @@
 #define DELTAT 0.01       // Time increament
 #define THETA 1.0         // Opening angle, for approximation in BH
 
-
 #define MASS_OF_JUPITER 1.899e27   //  Sample masses for testing
 #define MASS_OF_EARTH 5.974e24     //  and comparing the effect 
 #define MASS_OF_MOON 7.348e22      //  of using different values 
 #define MASS_OF_UNKNOWN 1.899e12   //  for m.
-
 
 
 /* Positional values of particle in space */
@@ -71,7 +67,6 @@ typedef struct Cell  {
 } Cell;
 
 
-
 Position* position;   // Current positions for all particles
 Velocity* ivelocity;  // Initial velocity for all particles
 Velocity* velocity;   // Velocity of particles in current processor
@@ -97,7 +92,6 @@ int pindex;          // The pindex points to the slot in the vectors/arrays that
 
 int name_length;                    // Length of processor name
 char name[MPI_MAX_PROCESSOR_NAME];  // Buffer to hold processor name
-
 
 
 /*
@@ -159,8 +153,7 @@ int check_collision(int index1, int index2) {
        // Collision detected
        return 1;
 
-   }
-   
+   }   
    return 0;
 }
 
@@ -197,7 +190,6 @@ void reinitialize_radius() {
       }
    }
 }
-
 
 
 /*
@@ -271,7 +263,6 @@ void compute_positions(){
          velocity[i].vz *= -1;      
    }
 }
-
 
 
 /*
@@ -441,7 +432,6 @@ void BH_generate_octtree() {
    root_cell->y = 0;
    root_cell->z = 0;
    
-
    int i;
    for (i = 1; i < N; i++) {
 
@@ -542,7 +532,6 @@ void BH_compute_force_from_octtree(Cell* cell, int index) {
       }      
    }
 }
-
 
 
 /*
@@ -678,7 +667,6 @@ void print_position(){
 }
 
 
-
 /*
  * Prints the current values of the bodies in space
  * to the console
@@ -694,6 +682,7 @@ void print_space() {
              velocity[i].vy, velocity[i].vz);
    }
 }
+
 
 /*
  * Writes the current positions of the particles to file
@@ -718,7 +707,6 @@ void write_positions() {
 
    fclose(file);
 }
-
 
 
 /*
@@ -772,7 +760,6 @@ void run_simulation(){
       write_positions();
 
 }
-
 
 
 int main(int argc, char* argv[]){
